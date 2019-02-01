@@ -1,0 +1,24 @@
+import requests
+import re
+def Anecdote(url):
+    headers = {
+        'User-Agent':'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 '
+    }
+    response = requests.get(url,headers=headers)
+    text = response.text
+    contents = re.findall(r'<div\sclass="content">.*?<span>(.*?)</span>',text,re.S)
+    Paragraph = []
+    for content in contents:
+        x = re.sub(r'<.*?>','',content)
+        Paragraph.append(x.strip())
+        print(x.strip())
+        print('='*50)
+def spider():
+    url = 'https://www.qiushibaike.com/text/page/1/'  
+    for x in range(1,10):
+        url = 'https://www.qiushibaike.com/text/page/%s/' % x
+        Anecdote(url)
+
+
+if __name__ == '__main__':
+    spider()
