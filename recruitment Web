@@ -1,0 +1,50 @@
+from lxml import etree
+import requests
+BASE_DOMAIN = 'https://hr.tencent.com/'
+HEADERS = {
+    'User-Agent':'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36',
+    'Cookie':'_ga=GA1.2.994674808.1548236845; pgv_pvi=7350672384; pgv_si=s842149888; _gcl_au=1.1.80756779.1548236847; PHPSESSID=bj8sodb5ridqlqj9lidua8ubo2',
+    'Referer':'https://hr.tencent.com/',
+    'Host':'hr.tencent.com',
+    'Upgrade-Insecure-Requests':"1"
+}
+def parse_detail_page(url):
+    posititon = {}
+    response = requests.get(url,headers=HEADERS)
+    html = etree.HTML(response.text)
+    title = html.xpath("//td[@id='sharetitle'/text()")[0]
+    tds = html.xpath("//tr[@class='c bootomline']/td")
+    address = tds[0].xpath(".//text()")[1]
+    category = tds[1].xpath(".//text()")[1]
+    nums = tds[2].xpath(".//text()")[1]
+    more_infos = html.xpath("//ul[@class='squareli']")
+    duty = more_infos[0].xpath(".//text()")
+    require = more_infos[1].xpath(".//text()")
+
+    posititon['title'] = title
+    posititon['address'] = address
+    posititon['category'] = category
+    posititon['nums'] = nums
+    posititon['duty'] = duty
+    posititon['require'] = require
+    return posititon
+def get_detail_urls(url):
+    response = requests.get("https://hr.tencent.com/position_detail.php?id=47299&keywords=python&tid=0&lid=0",headers=HEADERS)
+    text =response.text
+    html = etree.HTML(text)
+    links = html.xpath("//tr[@class='even' or @class='even']//a/@href")
+    links = map(lambda url:BASE_DOMAIN+url,links)
+    return links
+def spider():
+    base_url = 'https://hr.tencent.com/position.php?lid=&tid=&keywords=python&start={}'
+    positions = []
+    for x in range(0,54)：
+         x *= 10
+        url = base_url.format(x)
+        detail_urls = get_detail_urls(url)
+        for detail_url in detail_urls:
+            position = parse_detail_page(detail_url)
+            positions.append(position)
+            print(position)
+if __name__ == '__main__':
+    spider()
