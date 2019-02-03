@@ -1,4 +1,4 @@
-from lxml import etree
+#encoding: utf-8
 import requests
 BASE_DOMAIN = 'https://hr.tencent.com/'
 HEADERS = {
