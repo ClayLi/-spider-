@@ -1,0 +1,59 @@
+#encoding: utf-8
+import re
+import requests
+from lxml import etree
+import  os
+from queue import Queue
+import threading
+from urllib import request
+
+
+class Procuder(threading.Thread):
+    headers = {
+        'user-agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Mobile Safari/537.36'
+    }
+    def __init__(self,page_queue,img_queue,*args,**kwargs):
+        super(Procuder,self).__init__(*args,**kwargs)
+        self.page_queue = page_queue
+        self.img_queue = img_queue
+    def run(self):
+        while True:
+            if self.page_queue.empty():
+                break
+            url = self.page_queue.get()
+            self.parse_page(url)
+
+    def parse_page(self,url):
+        response = requests.get(url,headers=headers)
+        text = response.text
+        html = etree.HTML(text)
+        imgs = html.xpath("//div[@class='page-content text-center']//img[@class!='gif']")
+        for img in imgs:
+            img_url = img.get('data-original')
+            alt = img.get('alt')
+            alt = re.sub(r'[\?？\. 。!！\*]','',alt)
+            suffix = os.path.splitext(img_url)[1]
+            filename = alt + suffix
+            self.img_queue.put((img_url,filename))
+class Consumer(threading.Thread):
+    def __init__(self,page_queue,img_queue,*args,**kwargs):
+        super(Consumer,self).__init__(*args,**kwargs)
+        self.page_queue = page_queue
+        self.img_queue = img_queue
+    def run(self):
+        while True:
+            if self.img_queue.empty() and self.page_queue.empty():
+                break
+            img_url,filename = self.img_queue.get()
+            request.urlretrieve(img_url,'images/'+filename)
+
+
+def spider():
+    page_queue = Queue(100)
+    img_queue = Queue(500)
+    for x in range(1,101):
+        url = 'https://www.doutula.com/photo/list/?page=%d' % x
+        page_queue.put(url)
+
+if __name__ == '__main__':
+    spider()
