@@ -16,7 +16,7 @@ class LagouSpider(object):
         self.positions = []
     def run(self):
         self.driver.get(self.url)
-        with True:
+        while True:
             source = self.driver.page_source
             webDriverWait(driver=self.driver,timout=10).until(
                 EC.presence_of_element_located((By.XPATH,"//div[@class='pager_container']/span[last()]"))
